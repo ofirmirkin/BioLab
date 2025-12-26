@@ -1,8 +1,6 @@
 import streamlit as st
 
 # --- Helper Functions (Logic) ---
-# Note: Corrected '10e6' (10 million) to '1e6' (1 million) for standard conversions
-# and '10e3' to '1e3'.
 
 def mgml_to_mM(mgml, kDa):
     if kDa == 0: return 0
@@ -15,7 +13,6 @@ def nM_to_mM(nM):
     return nM / 1e6
 
 def nM_to_ugml(nM, kDa):
-    # derived: nM * (g/mol / 1000) -> ug/mL logic specific to your workflow
     return nM * kDa / 1e3 
 
 def mL_to_uL(mL):
