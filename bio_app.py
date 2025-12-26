@@ -40,6 +40,17 @@ def volume_cells_from_total_volume_of_cells(initial_num_cells_per_mL, cells_per_
 def resuspension_volume_uL(num_wells, vol_per_well_uL):
     return num_wells * vol_per_well_uL
 
+def generate_csv(data_dict):
+    """Converts a dictionary of data into a simple CSV string."""
+    csv_string = "Name,Value\n"
+    for name, value in data_dict.items():
+        # Format floats to 4 decimal places for cleanliness, or string otherwise
+        if isinstance(value, float):
+            csv_string += f"{name},{value:.4f}\n"
+        else:
+            csv_string += f"{name},{value}\n"
+    return csv_string
+
 # --- Streamlit UI ---
 
 st.set_page_config(page_title="BioLab Calculator", page_icon="🧪")
@@ -82,6 +93,7 @@ if tool_mode == "Cell Count Calculator":
     
     # Calculate volume of cells needed (mL)
     vol_cells_needed_ml = volume_cells_from_total_volume_of_cells(init_cells_per_ml, cells_per_well, num_wells)
+    vol_cells_needed_ul = mL_to_uL(vol_cells_needed_ml)
     
     # Calculate Total Volume required for the wells
     total_vol_required_ml = find_total_volume(num_wells, vol_per_well_ml)
@@ -111,8 +123,26 @@ if tool_mode == "Cell Count Calculator":
         val4, unit4 = f"{mL_to_uL(resuspension_vol_ml):.1f}", "µL"
     m4.metric(f"Resuspension Vol ({unit4})", f"{val4}")
     
-    # st.info(f"You need to take **{mL_to_uL(vol_cells_needed_ml):.1f} µL** of your cell stock.")
-
+# Data Export
+    export_data = {
+        "Input: Initial Cells per mL": init_cells_per_ml,
+        "Input: Initial Volume (mL)": init_vol_cells,
+        "Input: Target Cells per Well": cells_per_well,
+        "Input: Number of Wells": num_wells,
+        "Input: Volume per Well (uL)": vol_per_well_ul,
+        "Result: Total Cells Available": total_cells,
+        "Result: Cells Needed": cells_needed,
+        "Result: Stock Volume Needed (mL)": vol_cells_needed_ml,
+        "Result: Stock Volume Needed (uL)": vol_cells_needed_ul
+    }
+    
+    st.download_button(
+        label="📥 Download Results as CSV",
+        data=generate_csv(export_data),
+        file_name="cell_count_results.csv",
+        mime="text/csv"
+    )
+    
 # --- Mode 2: Drug Dilution Calculator ---
 elif tool_mode == "Drug Dilution Calculator":
     st.header("💊 Drug Dilution Calculator")
@@ -151,12 +181,6 @@ elif tool_mode == "Drug Dilution Calculator":
     r2.metric("Dilution Factor", f"{dilution_factor:.2f}X")
     r3.metric("Intermediate Conc.", f"{intermediate_conc:.1f} nM")
 
-    # st.success(f"""
-    # **Mix:**
-    # * **{volume_of_AB:.2f} µL** of Drug (Stock)
-    # * **{volume_of_media:.2f} µL** of Media
-    # """)
-    
     # Define a custom style for a large "Success" box
     st.markdown(
         f"""
@@ -175,6 +199,27 @@ elif tool_mode == "Drug Dilution Calculator":
         </div>
         """,
         unsafe_allow_html=True
+    )
+    
+    # Data Export
+    export_data = {
+        "Input: Initial Conc (nM)": init_conc_nm,
+        "Input: Final Conc (nM)": final_conc_nm,
+        "Input: Multiply Factor": multiply_factor,
+        "Input: Number of Wells": num_wells,
+        "Input: Volume per Well (uL)": vol_per_well_ul,
+        "Result: Total Volume Required (uL)": volume_required,
+        "Result: Intermediate Conc (nM)": intermediate_conc,
+        "Result: Dilution Factor": dilution_factor,
+        "Result: Volume of Drug Stock (uL)": volume_of_AB,
+        "Result: Volume of Media (uL)": volume_of_media
+    }
+
+    st.download_button(
+        label="📥 Download Results as CSV",
+        data=generate_csv(export_data),
+        file_name="drug_dilution_results.csv",
+        mime="text/csv"
     )
 
 
@@ -206,6 +251,23 @@ elif tool_mode == "Stock Volume Calculator":
         "Component": ["Stock Solution", "Diluant", "Total"],
         "Volume (µL)": [f"{stock:.2f}", f"{diluant:.2f}", f"{total_volume_ul:.2f}"]
     })
+    
+    # Data Export
+    export_data = {
+        "Input: Number of Wells": num_wells,
+        "Input: Volume per Well (uL)": vol_per_well_ul,
+        "Input: Dilution Factor": dilution,
+        "Result: Total Volume Needed (uL)": total_volume_ul,
+        "Result: Volume of Stock (uL)": stock,
+        "Result: Volume of Diluant (uL)": diluant
+    }
+
+    st.download_button(
+        label="📥 Download Results as CSV",
+        data=generate_csv(export_data),
+        file_name="stock_volume_results.csv",
+        mime="text/csv"
+    )
 
 # --- Mode 4: Quick Converters ---
 elif tool_mode == "Unit Converters":
